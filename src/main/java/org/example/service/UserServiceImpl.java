@@ -54,17 +54,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    public User findByEmail(String email) {
+        return userDAO.findByEmail(email);
+    }
+
+    @Override
     public void update(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDAO.update(user);
     }
 
     @Override
-    public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        User user = userDAO.findByLogin(login);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userDAO.findByEmail(email);
         if (user == null) {
-            throw new UsernameNotFoundException(String.format("User " + login + " not found"));
+            throw new UsernameNotFoundException(String.format("User " + email + " not found"));
         }
-        return new org.springframework.security.core.userdetails.User(user.getLogin(), user.getPassword(), user.getRoles());
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), user.getRoles());
     }
 }

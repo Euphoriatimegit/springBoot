@@ -32,68 +32,56 @@ public class UsersController {
         return "users/login";
     }
 
-    @GetMapping("/user")
-    public String info(Model model, Principal principal) {
-        User user = userService.findByLogin(principal.getName());
-        model.addAttribute("user", user);
-        return "users/info";
-    }
-
     @GetMapping("/admin")
-    public String getAllUsers(Model model) {
+    public String getAllUsers(Model model, Principal principal) {
+        model.addAttribute("user", userService.findByEmail(principal.getName()));
         model.addAttribute("users", userService.getAllUser());
         model.addAttribute("roles", roleService.getAllRoles());
         return "users/index";
     }
 
     @GetMapping("/admin/{id}")
-    public String show(@PathVariable("id") Long id, Model model) {
+    public String getUserInfoById(@PathVariable("id") Long id, Model model) {
         model.addAttribute("user", userService.getUserById(id));
-        return "users/show";
+        return "show";
     }
 
-    @GetMapping("admin/new")
+    @GetMapping("/admin/new")
     public String newUser(@ModelAttribute("user") User user, Model model) {
         model.addAttribute("roles", roleService.getAllRoles());
         return "users/new";
     }
 
     @PostMapping("/admin")
-    public String create(@ModelAttribute("user") @Valid User user,
-                         BindingResult bindingResult,
-                         @RequestParam(value = "addRoles", required = false) String[] addRoles,
-                         Model model) {
-        model.addAttribute("roles", roleService.getAllRoles());
-        if (bindingResult.hasErrors() || addRoles == null) {
+    public String newUserAdd(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
+                         Model model,@RequestParam(value = "edit_roles") String[] edit_roles) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("roles", roleService.getAllRoles());
             return "users/new";
         }
-        user.setRoles(convertorToRoles(addRoles));
+        user.setRoles(convertorToRoles(edit_roles));
+        userService.save(user);
+        return "redirect:/admin";
+    }
+
+    @PatchMapping("/admin/{id}")
+    public String update(@ModelAttribute("user") @Valid User user, Model model,
+                         @RequestParam(value = "edit_roles") String[] edit_roles) {
+        user.setRoles(convertorToRoles(edit_roles));
         userService.update(user);
         return "redirect:/admin";
     }
 
-    @GetMapping("/admin/{id}/edit")
-    public String edit(Model model, @PathVariable("id") Long id) {
-        User user = userService.getUserById(id);
-        user.setPassword(null);
-        model.addAttribute("user", user);
-        model.addAttribute("roles", roleService.getAllRoles());
-        return "users/edit";
+    @DeleteMapping("/admin/{id}")
+    public String delete(@PathVariable("id") Long id) {
+        userService.delete(id);
+        return "redirect:/admin";
     }
 
-    @PutMapping("/admin/{id}")
-    public String update(@ModelAttribute("user") @Valid User user,
-                         BindingResult bindingResult,
-                         @PathVariable("id") Long id,
-                         @RequestParam(value = "editRoles", required = false) String[] editRoles,
-                         Model model) {
-        if (bindingResult.hasErrors()||editRoles==null) {
-            model.addAttribute("roles", roleService.getAllRoles());
-            return "users/edit";
-        }
-        user.setRoles(convertorToRoles(editRoles));
-        userService.update(user);
-        return "redirect:/admin";
+    @GetMapping("/user")
+    public String UserInfo(Model model,Principal principal) {
+        model.addAttribute("user", userService.findByEmail(principal.getName()));
+        return "users/show";
     }
 
     private Set<Role> convertorToRoles(String... roles) {
@@ -103,11 +91,4 @@ public class UsersController {
         }
         return result;
     }
-
-    @DeleteMapping("/admin/{id}")
-    public String delete(@PathVariable("id") Long id) {
-        userService.delete(id);
-        return "redirect:/admin";
-    }
-
 }

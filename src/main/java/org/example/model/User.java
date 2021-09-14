@@ -22,7 +22,7 @@ public class User implements UserDetails {
     private String name;
 
     @Column(name = "age")
-    @Min(value = 16, message = "MinAge should be greater than 16")
+    @Min(value = 0, message = "MinAge should be greater than 0")
     @Max(value = 120, message = "MaxAge should be greater than 120")
     private byte age;
 

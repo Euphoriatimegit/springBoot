@@ -16,7 +16,7 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public List<User> getAllUser() {
-        return entityManager.createQuery("SELECT u from User u",User.class).getResultList();
+        return entityManager.createQuery("SELECT DISTINCT u FROM User u  LEFT JOIN FETCH u.roles", User.class).getResultList();
     }
 
     @Override
@@ -28,7 +28,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     @Transactional
     public void save(User user) {
-        entityManager.merge(user);
+        entityManager.persist(user);
     }
 
     @Override
@@ -43,6 +43,13 @@ public class UserDAOImpl implements UserDAO {
     public User findByLogin(String login) {
         return entityManager.createQuery("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.login=:login ", User.class)
                 .setParameter("login", login)
+                .getSingleResult();
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        return entityManager.createQuery("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.email=:email ", User.class)
+                .setParameter("email", email)
                 .getSingleResult();
     }
 
